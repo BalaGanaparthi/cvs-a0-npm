@@ -25,8 +25,12 @@ const secret_key_this_action_name = "THIS_ACTION_NAME"
 const secret_key_apis = "ENTERPRISE_APIs"
 const secret_key_token_prefix = "TOKEN_"
 const secret_key_client_prefix = "CLIENT_"
+const secret_key_mgmt_api_client_details = "MGMT_API_CLIENT_DETAILS"
+const secret_key_mgmt_api_token = "MGMT_API_TOKEN"
 
 /**
+ * <exported>
+ * 
  * Iterate through the APIs and check for tokens in secrets
  * > If valid tokens already exists, then reuse the tokens
  * > If tokens do not exist or have expired then mint new tokens
@@ -36,7 +40,7 @@ const secret_key_client_prefix = "CLIENT_"
  * @param {*} event 
  * @param {*} api 
  */
-async function loadTokensToCache(event, api) {
+function loadTokensToCache(event, api) {
 
     const domain = event.secrets[secret_key_domain]
     const apis = getAPIs(event);
@@ -79,27 +83,27 @@ async function loadTokensToCache(event, api) {
                 token = getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, apiAudience)
 
             }
-            updSecretAndCacheToken(api, token, apiName,  secrets)
-            if(!tokensMinted){
+            updSecretAndCacheToken(api, token, apiName, secrets)
+            if (!tokensMinted) {
                 tokensMinted = true
             }
         }
     }
-    if(tokensMinted){
+    if (tokensMinted) {
         const actionName = event.secrets[secret_key_this_action_name]
-        deployActionWithSecrets(secrets, actionName)
+        deployActionWithUpdatedSecrets(secrets)
     }
 }
 
 /**
- * Get the ENT API JSON string from the action secrets and return JSON object
+ * Get the API JSON string from the action secrets and return JSON object
  * 
  * @param {*} event 
  * @returns {jsonObj} 
  */
-async function getAPIs(event) {
-    const enterprise_apis_json = event.secrets[secret_key_apis]
-    return convertStringLiteralToJsonObj(enterprise_apis_json)
+function getAPIs(event) {
+    const apis_json = event.secrets[secret_key_apis]
+    return convertStringLiteralToJsonObj(apis_json)
 }
 
 /**
@@ -107,7 +111,7 @@ async function getAPIs(event) {
  * 
  * @param {String} jsonStringLiteral 
  */
-async function convertStringLiteralToJsonObj(jsonStringLiteral) {
+function convertStringLiteralToJsonObj(jsonStringLiteral) {
     return jsonStringLiteral ? JSON.parse(jsonStringLiteral) : {}
 }
 
@@ -120,7 +124,7 @@ async function convertStringLiteralToJsonObj(jsonStringLiteral) {
  * @param {*} event 
  * @param {*} apiName 
  */
-async function isTokenValidForAPI(apiToken) {
+function isTokenValidForAPI(apiToken) {
     var isTokenValid
     if (!isEmptyJSON(apiToken)) {
         const apiToken = apiToken[token_key_token]
@@ -145,11 +149,42 @@ async function isTokenValidForAPI(apiToken) {
  * @param {*} jsonObj 
  * @returns {boolean} true : if JSON object is empty `{}`
  */
-async function isEmptyJSON(jsonObj) {
+function isEmptyJSON(jsonObj) {
     return Object.keys(jsonObj).length === 0;
 }
 
-async function updSecretAndCacheToken(api, token, apiName, secrets) {
+/**
+ * Function to generate signed JWT. 
+ * 
+ * @param {*} clientID - Client ID of the M2M app in Auth0 configured with Private Key credentials
+ * @param {*} privateKey - Associated private key with the public key set with M2M app
+ * @param {*} a0Domain - Auth0 domain
+ * @returns - Signed JWT assertions
+ */
+function createAssertion(clientID, privateKey, domain) {
+    const pk = privateKey.split("\\n").join("\n");
+    var signOptions = {
+        issuer: clientID,
+        subject: clientID,
+        audience: domain,
+        expiresIn: "60s",
+        algorithm: "RS256",
+        jwtid: uuid(),
+        header: { "alg": "RS256" }
+    };
+    var token = jwt.sign({}, pk, signOptions);
+    return token;
+}
+
+/**
+ * Update existing secrets with new token and cache the new token
+ * 
+ * @param {*} api 
+ * @param {*} token 
+ * @param {*} apiName 
+ * @param {*} secrets 
+ */
+function updSecretAndCacheToken(api, token, apiName, secrets) {
 
     //Set token in Secrets
     secrets.push({
@@ -163,14 +198,14 @@ async function updSecretAndCacheToken(api, token, apiName, secrets) {
 }
 
 /**
- * Function to redeem signed jwt for tokens (management and enterprise apis)
+ * Function to mint token with private_key_jwt
  * 
  * @param {*} jwtAssertion - Signed JWT
  * @param {*} audience - API identifier
  * @returns - Return access token and the token expiry : 
  *            {access_token: 'At', expires_in : 'AT Expiry' }
  */
-async function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
+function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
     const auth0LoginOpts = {
         url: tokenEndpoint,
         method: "POST",
@@ -186,7 +221,17 @@ async function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
     return _getAccesToken(auth0LoginOpts)
 }
 
-async function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience) {
+/**
+ * Function to mint token with client_secret
+ * 
+ * @param {*} tokenEndpoint 
+ * @param {*} clientID 
+ * @param {*} clientSecret 
+ * @param {*} audience 
+ * @returns - Return access token and the token expiry : 
+ *            {access_token: 'At', expires_in : 'AT Expiry' }
+ */
+function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience) {
     const auth0LoginOpts = {
         url: tokenEndpoint,
         method: "POST",
@@ -202,10 +247,10 @@ async function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecr
     return _getAccesToken(auth0LoginOpts)
 }
 
-async function _getAccesToken(tokenRequestPayload) {
+function _getAccesToken(tokenRequestPayload) {
     let auth0LoginBody
     try {
-        auth0LoginBody = await rp(tokenRequestPayload);
+        auth0LoginBody = rp(tokenRequestPayload);
     } catch (error) {
         console.error('Error getting token : ', error.message);
     }
@@ -213,3 +258,86 @@ async function _getAccesToken(tokenRequestPayload) {
         ? { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
         : { access_token: "", expires_in: "" };
 }
+
+function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
+
+    const mgmtApiTokenJsonString = event.secrets[secret_key_mgmt_api_token]
+    const mgmtApiToken = convertStringLiteralToJsonObj(mgmtApiTokenJsonString)
+
+    const audience = `https://${domain}/api/v2/`
+
+    let token
+    if (isTokenValidForAPI(mgmtApiToken)) {
+        token = mgmtApiToken.access_token
+    } else {
+
+        //Generate a signed jwt
+        const mgmtApiClientDetailsJSON = event.secrets[secret_key_mgmt_api_client_details]
+        const mgmtApiClientDetails = convertStringLiteralToJsonObj(mgmtApiClientDetailsJSON)
+        const clientID = mgmtApiClientDetails[client_key_client_id]
+        const credsType = mgmtApiClientDetails[client_key_client_type]
+
+        let token
+        if (credsType === const_client_creds_type_secret_key) {
+            const clientSecret = mgmtApiClientDetails[client_key_client_creds]
+            token = getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience)
+        } else if (credsType === const_client_creds_type_pvt_key_jwt) {
+            const privateKey = mgmtApiClientDetails[client_key_client_creds]
+            const jwtAssertion = createAssertion(clientID, privateKey, domain)
+            token = getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
+        }
+
+        secrets.push({
+            name: secret_key_mgmt_api_token,
+            value: `{"${token_key_token}" : "${token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (982 * token.expires_in))}"}`
+        });
+
+    }
+
+    const managementAPIHandle = new ManagementClient({
+        token: token.access_token,
+        domain: domain,
+        scope: "read:actions update:actions"
+    });
+    
+
+    var params = { id: actionId };
+    try {
+        //Get the actionId by actionName
+        const actionId = getActionID(actionName, managementAPIHandle);
+
+        //Update the action with the secrets
+        managementAPIHandle.actions.update(params, secrets);
+
+        //Deploy action
+        managementAPIHandle.actions.deploy(params);
+
+    } catch (error) {
+        console.error('Error updating secrets:', error.message);
+    }
+
+}
+
+/**
+   * Function to get action_id by action_name
+   * 
+   * @param {*} actionName - Name of action (to update the secrets with AT and ATExpiry)
+   * @param {*} management - Management api handle to call Auth0 to get action_id
+   * @returns - action_id ("0" if any error or a valid action_id)
+   */
+function getActionID(actionName, managementAPIHandle) {
+    let actionId = "0"
+    try {
+        const params = { actionName: actionName };
+        const actions = managementAPIHandle.actions.getAll(params);
+        const action = actions.actions.find((action) => action.name === actionName);
+        if (action) {
+            actionId = action.id;
+        }
+    } catch (error) {
+        console.error('Error retrieving actions:', error.message);
+    }
+    return actionId;
+}
+
+module.exports = loadTokensToCache

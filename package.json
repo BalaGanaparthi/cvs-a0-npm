@@ -1,6 +1,6 @@
 {
   "name": "cvs-a0-ex-tokens",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Handle api tokens for calls made from A0 extensibility code",
   "main": "index.js",
   "scripts": {
