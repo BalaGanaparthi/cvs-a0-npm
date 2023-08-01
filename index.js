@@ -43,7 +43,7 @@ let debug = false
  * @param {*} api 
  */
 function loadTokensToCache(event, api) {
-    
+
     let debug = Object.keys(event.secrets).includes(secret_key_debug);
 
     _log("loadTokensToCache", "Start")
@@ -375,4 +375,6 @@ function _log(method, message) {
     }
 }
 
-module.exports = loadTokensToCache
+module.exports = {
+    loadTokensToCache: loadTokensToCache
+}
