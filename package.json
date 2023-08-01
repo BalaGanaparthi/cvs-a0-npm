@@ -1,0 +1,25 @@
+{
+  "name": "cvs-a0-ex-tokens",
+  "version": "0.1.0",
+  "description": "Handle api tokens for calls made from A0 extensibility code",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BalaGanaparthi/cvs-a0-npm.git"
+  },
+  "keywords": [
+    "Auth0",
+    "A0",
+    "Auth0-Extensibility",
+    "A0-Tokens"
+  ],
+  "author": "Let's Auth0",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BalaGanaparthi/cvs-a0-npm/issues"
+  },
+  "homepage": "https://github.com/BalaGanaparthi/cvs-a0-npm#readme"
+}
