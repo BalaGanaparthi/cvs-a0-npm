@@ -1,9 +1,5 @@
 
-/**
- * 
- */
-
-const a0MgmtClient = require('auth0').ManagementClient;
+const ManagementClient = require('auth0').ManagementClient;
 const jwt = require('jsonwebtoken');
 const { v4: uuid } = require('uuid');
 const rp = require("request-promise");
@@ -30,6 +26,12 @@ const secret_key_mgmt_api_token = "mgmt_api_token"
 const secret_key_debug = "DEBUG"
 
 let debug = false
+
+function helloA0(event, api) {
+    console.log(`${event} ${api}`)
+    return event.secrets
+}
+
 /**
  * <exported>
  * 
@@ -321,7 +323,7 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
 
     }
 
-    const managementAPIHandle = new a0MgmtClient({
+    const managementAPIHandle = new ManagementClient({
         token: token.access_token,
         domain: domain,
         scope: "read:actions update:actions"
@@ -376,5 +378,6 @@ function _log(method, message) {
 }
 
 module.exports = {
-    loadTokensToCache: loadTokensToCache
+    loadTokensToCache: loadTokensToCache,
+    helloA0: helloA0
 }
