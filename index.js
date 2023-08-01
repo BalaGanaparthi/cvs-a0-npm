@@ -15,7 +15,7 @@ const token_key_token = "token"
 const token_key_expiry = "expiry"
 //
 const client_key_client_id = "client_id"
-const client_key_client_type = "client_type"
+const client_key_client_creds_type = "creds_type"
 const client_key_client_creds = "client_creds"
 const const_client_creds_type_secret_key = "secret_key"
 const const_client_creds_type_pvt_key_jwt = "private_key_jwt"
@@ -23,11 +23,13 @@ const const_client_creds_type_pvt_key_jwt = "private_key_jwt"
 const secret_key_domain = "DOMAIN"
 const secret_key_this_action_name = "THIS_ACTION_NAME"
 const secret_key_apis = "ENTERPRISE_APIs"
-const secret_key_token_prefix = "TOKEN_"
-const secret_key_client_prefix = "CLIENT_"
-const secret_key_mgmt_api_client_details = "MGMT_API_CLIENT_DETAILS"
-const secret_key_mgmt_api_token = "MGMT_API_TOKEN"
+const secret_key_token_prefix = "ent_api_token_"
+const secret_key_client_prefix = "ENT_API_CLIENT_"
+const secret_key_mgmt_api_client = "MGMT_API_CLIENT"
+const secret_key_mgmt_api_token = "mgmt_api_token"
+const secret_key_debug = "DEBUG"
 
+let debug = false
 /**
  * <exported>
  * 
@@ -41,6 +43,10 @@ const secret_key_mgmt_api_token = "MGMT_API_TOKEN"
  * @param {*} api 
  */
 function loadTokensToCache(event, api) {
+    
+    let debug = Object.keys(event.secrets).includes(secret_key_debug);
+
+    _log("loadTokensToCache", "Start")
 
     const domain = event.secrets[secret_key_domain]
     const apis = getAPIs(event);
@@ -71,7 +77,7 @@ function loadTokensToCache(event, api) {
             const apiClientDetailsJsonString = event.secrets[`${secret_key_client_prefix}${apiName}`]
             const apiClientDetails = convertStringLiteralToJsonObj(apiClientDetailsJsonString)
             const clientID = apiClientDetails[client_key_client_id]
-            const credsType = apiClientDetails[client_key_client_type]
+            const credsType = apiClientDetails[client_key_client_creds_type]
 
             let token
             if (credsType === const_client_creds_type_secret_key) {
@@ -93,6 +99,7 @@ function loadTokensToCache(event, api) {
         const actionName = event.secrets[secret_key_this_action_name]
         deployActionWithUpdatedSecrets(secrets)
     }
+    _log("loadTokensToCache", "End")
 }
 
 /**
@@ -102,8 +109,11 @@ function loadTokensToCache(event, api) {
  * @returns {jsonObj} 
  */
 function getAPIs(event) {
+    _log("getAPIs", "Start")
     const apis_json = event.secrets[secret_key_apis]
-    return convertStringLiteralToJsonObj(apis_json)
+    const apis_json_obj = convertStringLiteralToJsonObj(apis_json)
+    _log("getAPIs", "End")
+    return apis_json_obj
 }
 
 /**
@@ -112,7 +122,10 @@ function getAPIs(event) {
  * @param {String} jsonStringLiteral 
  */
 function convertStringLiteralToJsonObj(jsonStringLiteral) {
-    return jsonStringLiteral ? JSON.parse(jsonStringLiteral) : {}
+    _log("convertStringLiteralToJsonObj", "Start")
+    const json_obj = jsonStringLiteral ? JSON.parse(jsonStringLiteral) : {}
+    _log("convertStringLiteralToJsonObj", "End")
+    return json_obj
 }
 
 /**
@@ -125,6 +138,7 @@ function convertStringLiteralToJsonObj(jsonStringLiteral) {
  * @param {*} apiName 
  */
 function isTokenValidForAPI(apiToken) {
+    _log("isTokenValidForAPI", "Start")
     var isTokenValid
     if (!isEmptyJSON(apiToken)) {
         const apiToken = apiToken[token_key_token]
@@ -141,6 +155,7 @@ function isTokenValidForAPI(apiToken) {
     } else {
         isTokenValid = false
     }
+    _log("isTokenValidForAPI", "End")
     return isTokenValid;
 }
 
@@ -150,7 +165,10 @@ function isTokenValidForAPI(apiToken) {
  * @returns {boolean} true : if JSON object is empty `{}`
  */
 function isEmptyJSON(jsonObj) {
-    return Object.keys(jsonObj).length === 0;
+    _log("isEmptyJSON", "Start")
+    const isEmpty = Object.keys(jsonObj).length === 0;
+    _log("isEmptyJSON", "End")
+    return isEmpty
 }
 
 /**
@@ -162,6 +180,7 @@ function isEmptyJSON(jsonObj) {
  * @returns - Signed JWT assertions
  */
 function createAssertion(clientID, privateKey, domain) {
+    _log("createAssertion", "Start")
     const pk = privateKey.split("\\n").join("\n");
     var signOptions = {
         issuer: clientID,
@@ -173,6 +192,7 @@ function createAssertion(clientID, privateKey, domain) {
         header: { "alg": "RS256" }
     };
     var token = jwt.sign({}, pk, signOptions);
+    _log("createAssertion", "End")
     return token;
 }
 
@@ -185,7 +205,7 @@ function createAssertion(clientID, privateKey, domain) {
  * @param {*} secrets 
  */
 function updSecretAndCacheToken(api, token, apiName, secrets) {
-
+    _log("updSecretAndCacheToken", "Start")
     //Set token in Secrets
     secrets.push({
         name: `${secret_key_token_prefix}${apiName}`,
@@ -194,7 +214,7 @@ function updSecretAndCacheToken(api, token, apiName, secrets) {
 
     //Cache the enterprise access token
     api.cache.set(`${cache_key_token_prefix}${apiName}`, accessToken)
-
+    _log("updSecretAndCacheToken", "End")
 }
 
 /**
@@ -206,6 +226,7 @@ function updSecretAndCacheToken(api, token, apiName, secrets) {
  *            {access_token: 'At', expires_in : 'AT Expiry' }
  */
 function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
+    _log("getAccesTokenWithPvtKeyJwt", "Start")
     const auth0LoginOpts = {
         url: tokenEndpoint,
         method: "POST",
@@ -217,8 +238,9 @@ function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
             audience: audience
         }
     };
-
-    return _getAccesToken(auth0LoginOpts)
+    const token = _getAccesToken(auth0LoginOpts);
+    _log("getAccesTokenWithPvtKeyJwt", "End")
+    return token
 }
 
 /**
@@ -232,6 +254,7 @@ function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
  *            {access_token: 'At', expires_in : 'AT Expiry' }
  */
 function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience) {
+    _log("getAccesTokenWithClientSecret", "Start")
     const auth0LoginOpts = {
         url: tokenEndpoint,
         method: "POST",
@@ -243,24 +266,28 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
             audience: audience
         }
     };
-
-    return _getAccesToken(auth0LoginOpts)
+    const token = _getAccesToken(auth0LoginOpts)
+    _log("getAccesTokenWithClientSecret", "End")
+    return token
 }
 
 function _getAccesToken(tokenRequestPayload) {
+    _log("_getAccesToken", "Start")
     let auth0LoginBody
     try {
         auth0LoginBody = rp(tokenRequestPayload);
     } catch (error) {
         console.error('Error getting token : ', error.message);
     }
-    return (auth0LoginBody)
+    const token = (auth0LoginBody)
         ? { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
         : { access_token: "", expires_in: "" };
+    _log("_getAccesToken", "End")
+    return token
 }
 
 function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
-
+    _log("deployActionWithUpdatedSecrets", "Start")
     const mgmtApiTokenJsonString = event.secrets[secret_key_mgmt_api_token]
     const mgmtApiToken = convertStringLiteralToJsonObj(mgmtApiTokenJsonString)
 
@@ -272,10 +299,10 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
     } else {
 
         //Generate a signed jwt
-        const mgmtApiClientDetailsJSON = event.secrets[secret_key_mgmt_api_client_details]
+        const mgmtApiClientDetailsJSON = event.secrets[secret_key_mgmt_api_client]
         const mgmtApiClientDetails = convertStringLiteralToJsonObj(mgmtApiClientDetailsJSON)
         const clientID = mgmtApiClientDetails[client_key_client_id]
-        const credsType = mgmtApiClientDetails[client_key_client_type]
+        const credsType = mgmtApiClientDetails[client_key_client_creds_type]
 
         let token
         if (credsType === const_client_creds_type_secret_key) {
@@ -299,7 +326,6 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
         domain: domain,
         scope: "read:actions update:actions"
     });
-    
 
     var params = { id: actionId };
     try {
@@ -316,6 +342,7 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
         console.error('Error updating secrets:', error.message);
     }
 
+    _log("deployActionWithUpdatedSecrets", "End")
 }
 
 /**
@@ -326,6 +353,7 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
    * @returns - action_id ("0" if any error or a valid action_id)
    */
 function getActionID(actionName, managementAPIHandle) {
+    _log("getActionID", "Start")
     let actionId = "0"
     try {
         const params = { actionName: actionName };
@@ -337,7 +365,14 @@ function getActionID(actionName, managementAPIHandle) {
     } catch (error) {
         console.error('Error retrieving actions:', error.message);
     }
+    _log("getActionID", "End")
     return actionId;
+}
+
+function _log(method, message) {
+    if (debug) {
+        console.log(`[${method}]>> [${message}] `)
+    }
 }
 
 module.exports = loadTokensToCache
