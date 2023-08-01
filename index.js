@@ -321,7 +321,7 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
 
     }
 
-    const managementAPIHandle = new ManagementClient({
+    const managementAPIHandle = new a0MgmtClient({
         token: token.access_token,
         domain: domain,
         scope: "read:actions update:actions"
