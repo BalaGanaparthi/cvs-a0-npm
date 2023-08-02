@@ -44,7 +44,7 @@ function helloA0(event, api) {
  * @param {*} event 
  * @param {*} api 
  */
-function loadTokensToCache(event, api) {
+async function loadTokensToCache(event, api) {
 
     let debug = Object.keys(event.secrets).includes(secret_key_debug);
 
@@ -84,11 +84,11 @@ function loadTokensToCache(event, api) {
             let token
             if (credsType === const_client_creds_type_secret_key) {
                 const clientSecret = apiClientDetails[client_key_client_creds]
-                token = getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, apiAudience)
+                token = await getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, apiAudience)
             } else if (credsType === const_client_creds_type_pvt_key_jwt) {
                 const privateKey = apiClientDetails[client_key_client_creds]
                 const jwtAssertion = createAssertion(clientID, privateKey, a0Domain)
-                token = getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, apiAudience)
+                token = await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, apiAudience)
             }
             _log("loadTokensToCache", `APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
             console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}], CredsType = [${credsType}], Token = [${JSON.stringify(token)}]`)
@@ -101,7 +101,7 @@ function loadTokensToCache(event, api) {
     }
     if (tokensMinted) {
         const actionName = event.secrets[secret_key_this_action_name]
-        deployActionWithUpdatedSecrets(secrets)
+        await deployActionWithUpdatedSecrets(secrets)
     }
     _log("loadTokensToCache", "End")
 }
@@ -229,7 +229,7 @@ function updSecretAndCacheToken(api, token, apiName, secrets) {
  * @returns - Return access token and the token expiry : 
  *            {access_token: 'At', expires_in : 'AT Expiry' }
  */
-function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
+async function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
     _log("getAccesTokenWithPvtKeyJwt", "Start")
     const auth0LoginOpts = {
         url: tokenEndpoint,
@@ -242,7 +242,7 @@ function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
             audience: audience
         }
     };
-    const token = _getAccesToken(auth0LoginOpts);
+    const token = await _getAccesToken(auth0LoginOpts);
     _log("getAccesTokenWithPvtKeyJwt", "End")
     return token
 }
@@ -257,7 +257,7 @@ function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
  * @returns - Return access token and the token expiry : 
  *            {access_token: 'At', expires_in : 'AT Expiry' }
  */
-function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience) {
+async function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience) {
     _log("getAccesTokenWithClientSecret", "Start")
     const auth0LoginOpts = {
         url: tokenEndpoint,
@@ -271,36 +271,24 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
         }
     };
     console.log(`getAccesTokenWithClientSecret :: Calling _getAccesToken with payload > [${JSON.stringify(auth0LoginOpts)}]`)
-    const token = _getAccesToken(auth0LoginOpts)
+    const token = await _getAccesToken(auth0LoginOpts)
     console.log(`getAccesTokenWithClientSecret :: Token > [${JSON.stringify(token)}]`)
 
     _log("getAccesTokenWithClientSecret", "End")
     return token
 }
 
-function _getAccesToken(tokenRequestPayload) {
+async function _getAccesToken(tokenRequestPayload) {
     _log("_getAccesToken", "Start")
 
     console.log(`_getAccesToken :: tokenRequestPayload = [${JSON.stringify(tokenRequestPayload)}]`)
 
     let auth0LoginBody
-    // try {
-    //     auth0LoginBody = rp(tokenRequestPayload).then (function (payload){
-    //         return payload
-    //     }, );
-    // } catch (error) {
-    //     console.error('_getAccesToken :: Error getting token : ', error.message);
-    // }
-
-    (async () => {
-        try {
-            auth0LoginBody = await rp(tokenRequestPayload);
-            console.log(auth0LoginBody);
-        } catch (e) {
-            console.log(e);
-        }
-        console.log(auth0LoginBody)
-    })();
+    try {
+        auth0LoginBody = await rp(tokenRequestPayload)
+    } catch (error) {
+        console.error('_getAccesToken :: Error getting token : ', error.message);
+    }
 
     console.log(`_getAccesToken :: response from token endpoint : [${JSON.stringify(auth0LoginBody)}]`)
 
@@ -311,7 +299,7 @@ function _getAccesToken(tokenRequestPayload) {
     return auth0LoginBody
 }
 
-function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
+async function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
     _log("deployActionWithUpdatedSecrets", "Start")
     let containsMgmtToken = Object.keys(event.secrets).includes(secret_key_mgmt_api_token);
     console.log(`deployActionWithUpdatedSecrets :: hasMgmtToken? > [${containsMgmtToken ? "yes" : "no"}]`)
@@ -337,11 +325,11 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
         let token
         if (credsType === const_client_creds_type_secret_key) {
             const clientSecret = mgmtApiClientDetails[client_key_client_creds]
-            token = getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience)
+            token = await getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience)
         } else if (credsType === const_client_creds_type_pvt_key_jwt) {
             const privateKey = mgmtApiClientDetails[client_key_client_creds]
             const jwtAssertion = createAssertion(clientID, privateKey, domain)
-            token = getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
+            token = await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
         }
 
         secrets.push({
