@@ -301,8 +301,10 @@ async function _getAccesToken(tokenRequestPayload) {
 
 async function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
     _log("deployActionWithUpdatedSecrets", "Start")
-    let containsMgmtToken = Object.keys(event.secrets).includes(secret_key_mgmt_api_token);
-    console.log(`deployActionWithUpdatedSecrets :: hasMgmtToken? > [${containsMgmtToken ? "yes" : "no"}]`)
+    // let containsMgmtToken = Object.keys(event.secrets).includes(secret_key_mgmt_api_token);
+    // console.log(`deployActionWithUpdatedSecrets :: hasMgmtToken? > [${containsMgmtToken ? "yes" : "no"}]`)
+
+    console.log(`deployActionWithUpdatedSecrets :: Secrets > [${secrets}]`)
 
     const mgmtApiTokenJsonString = event.secrets[secret_key_mgmt_api_token]
     console.log(`deployActionWithUpdatedSecrets :: mgmtApiTokenJsonString? > [${mgmtApiTokenJsonString}]`)
