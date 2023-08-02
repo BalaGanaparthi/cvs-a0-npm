@@ -28,7 +28,7 @@ const secret_key_debug = "DEBUG"
 let debug = false
 
 function helloA0(event, api) {
-    console.log(`${event} ${api}`)
+    console.log(`${JSON.stringify(event)} ${JSON.stringify(api)}`)
     return event.secrets
 }
 
@@ -215,7 +215,7 @@ function updSecretAndCacheToken(api, token, apiName, secrets) {
     });
 
     //Cache the enterprise access token
-    api.cache.set(`${cache_key_token_prefix}${apiName}`, accessToken)
+    api.cache.set(`${cache_key_token_prefix}${apiName}`, token.access_token)
     _log("updSecretAndCacheToken", "End")
 }
 
