@@ -272,6 +272,7 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
             audience: audience
         }
     };
+    console.log(`getAccesTokenWithClientSecret :: Calling _getAccesToken with payload > [${JSON.stringify(auth0LoginOpts)}]`)
     const token = _getAccesToken(auth0LoginOpts)
     _log("getAccesTokenWithClientSecret", "End")
     return token
@@ -279,6 +280,7 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
 
 function _getAccesToken(tokenRequestPayload) {
     _log("_getAccesToken", "Start")
+    
     console.log(`_getAccesToken :: tokenRequestPayload = [${JSON.stringify(tokenRequestPayload)}]`)
     let auth0LoginBody
     try {
