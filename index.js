@@ -92,8 +92,8 @@ function loadTokensToCache(event, api) {
                 token = getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, apiAudience)
             }
              _log("loadTokensToCache", `APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
-             console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
-             
+             console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}], CredsType = [${credsType}], Token = [${JSON.stringify(token)}]`)
+
             updSecretAndCacheToken(api, token, apiName, secrets)
             if (!tokensMinted) {
                 tokensMinted = true
@@ -284,6 +284,9 @@ function _getAccesToken(tokenRequestPayload) {
     } catch (error) {
         console.error('Error getting token : ', error.message);
     }
+
+    console.log(`_getAccesToken :: ${JSON.stringify(auth0LoginBody)}`)
+
     const token = (auth0LoginBody)
         ? { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
         : { access_token: "", expires_in: "" };
@@ -376,7 +379,7 @@ function getActionID(actionName, managementAPIHandle) {
 
 function _log(method, message) {
     if (debug) {
-        console.log(`[${method}]>> [${message}] `)
+        console.log(`[${method}]>> [${message}]`)
     }
 }
 
