@@ -90,8 +90,8 @@ function loadTokensToCache(event, api) {
                 const jwtAssertion = createAssertion(clientID, privateKey, a0Domain)
                 token = getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, apiAudience)
             }
-            _log("loadTokensToCache", `APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
-            console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}], CredsType = [${credsType}], Token = [${JSON.stringify(token)}]`)
+             _log("loadTokensToCache", `APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
+             console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}], CredsType = [${credsType}], Token = [${JSON.stringify(token)}]`)
 
             updSecretAndCacheToken(api, token, apiName, secrets)
             if (!tokensMinted) {
@@ -271,41 +271,43 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
         }
     };
     console.log(`getAccesTokenWithClientSecret :: Calling _getAccesToken with payload > [${JSON.stringify(auth0LoginOpts)}]`)
-    const token = _getAccesToken(auth0LoginOpts).then(function (payload) {
-        pa
+    const token = _getAccesToken(auth0LoginOpts).then (function (payload){
+        return { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
     })
+    console.log(`getAccesTokenWithClientSecret :: Token > [${JSON.stringify(token)}]`)
+
     _log("getAccesTokenWithClientSecret", "End")
     return token
 }
 
-function _getAccesToken(tokenRequestPayload) {
+async function _getAccesToken(tokenRequestPayload) {
     _log("_getAccesToken", "Start")
-
+    
     console.log(`_getAccesToken :: tokenRequestPayload = [${JSON.stringify(tokenRequestPayload)}]`)
 
     let auth0LoginBody
     try {
-        auth0LoginBody = rp(tokenRequestPayload).then(function (payload) {
+        auth0LoginBody = rp(tokenRequestPayload).then (function (payload){
             return payload
-        });
+        }, );
     } catch (error) {
         console.error('_getAccesToken :: Error getting token : ', error.message);
     }
 
     console.log(`_getAccesToken :: response from token endpoint : [${JSON.stringify(auth0LoginBody)}]`)
 
-    const token = (auth0LoginBody)
-        ? { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
-        : { access_token: "", expires_in: "" };
+    // const token = (auth0LoginBody)
+    //     ? { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
+    //     : { access_token: "", expires_in: "" };
     _log("_getAccesToken", "End")
-    return token
+    return auth0LoginBody
 }
 
 function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
     _log("deployActionWithUpdatedSecrets", "Start")
     let containsMgmtToken = Object.keys(event.secrets).includes(secret_key_mgmt_api_token);
     console.log(`deployActionWithUpdatedSecrets :: hasMgmtToken? > [${containsMgmtToken ? "yes" : "no"}]`)
-
+    
     const mgmtApiTokenJsonString = event.secrets[secret_key_mgmt_api_token]
     console.log(`deployActionWithUpdatedSecrets :: mgmtApiTokenJsonString? > [${mgmtApiTokenJsonString}]`)
     const mgmtApiToken = convertStringLiteralToJsonObj(mgmtApiTokenJsonString)
@@ -346,7 +348,7 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
         domain: domain,
         scope: "read:actions update:actions"
     });
-
+    
     try {
         //Get the actionId by actionName
         const actionId = getActionID(actionName, managementAPIHandle);
