@@ -101,7 +101,7 @@ async function loadTokensToCache(event, api) {
     }
     if (tokensMinted) {
         const actionName = event.secrets[secret_key_this_action_name]
-        await deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
+        await deployActionWithUpdatedSecrets(event, api, tokenEndpoint, secrets, domain, actionName)
     }
     _log("loadTokensToCache", "End")
 }
@@ -299,7 +299,7 @@ async function _getAccesToken(tokenRequestPayload) {
     return auth0LoginBody
 }
 
-async function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
+async function deployActionWithUpdatedSecrets(event, api, tokenEndpoint, secrets, domain, actionName) {
     _log("deployActionWithUpdatedSecrets", "Start")
     // let containsMgmtToken = Object.keys(event.secrets).includes(secret_key_mgmt_api_token);
     // console.log(`deployActionWithUpdatedSecrets :: hasMgmtToken? > [${containsMgmtToken ? "yes" : "no"}]`)
