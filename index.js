@@ -324,7 +324,6 @@ async function deployActionWithUpdatedSecrets(event, api, tokenEndpoint, secrets
         const clientID = mgmtApiClientDetails[client_key_client_id]
         const credsType = mgmtApiClientDetails[client_key_client_creds_type]
 
-        let token
         if (credsType === const_client_creds_type_secret_key) {
             const clientSecret = mgmtApiClientDetails[client_key_client_creds]
             token = await getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience)
@@ -334,10 +333,13 @@ async function deployActionWithUpdatedSecrets(event, api, tokenEndpoint, secrets
             token = await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
         }
 
+        console.log(`deployActionWithUpdatedSecrets :: Management token body is [${JSON.stringify(token)}] `)
         secrets.push({
             name: secret_key_mgmt_api_token,
             value: `{"${token_key_token}" : "${token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (982 * token.expires_in))}"}`
         });
+
+        console.log(`deployActionWithUpdatedSecrets :: Secrets object to be store in A0 is [${JSON.stringify(secrets)}] `)
 
     }
 
