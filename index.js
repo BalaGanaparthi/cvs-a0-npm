@@ -272,7 +272,7 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
     };
     console.log(`getAccesTokenWithClientSecret :: Calling _getAccesToken with payload > [${JSON.stringify(auth0LoginOpts)}]`)
     const token = _getAccesToken(auth0LoginOpts).then (function (payload){
-        return { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
+        return { access_token: payload.access_token, expires_in: payload.expires_in }
     })
     console.log(`getAccesTokenWithClientSecret :: Token > [${JSON.stringify(token)}]`)
 
