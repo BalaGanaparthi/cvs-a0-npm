@@ -236,6 +236,7 @@ function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
         url: tokenEndpoint,
         method: "POST",
         json: true,
+        headers: {'content-type': 'application/x-www-form-urlencoded'},
         body: {
             grant_type: "client_credentials",
             client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
@@ -264,6 +265,7 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
         url: tokenEndpoint,
         method: "POST",
         json: true,
+        headers: {'content-type': 'application/x-www-form-urlencoded'},
         body: {
             grant_type: "client_credentials",
             client_id: clientID,
@@ -283,6 +285,7 @@ function _getAccesToken(tokenRequestPayload) {
         auth0LoginBody = rp(tokenRequestPayload);
     } catch (error) {
         console.error('Error getting token : ', error.message);
+        console.log(`_getAccesToken :: Error during token endpoint call > Error = [${JSON.stringify(error)}]`)
     }
 
     console.log(`_getAccesToken :: ${JSON.stringify(auth0LoginBody)}`)
