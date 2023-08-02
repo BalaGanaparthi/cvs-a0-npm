@@ -265,7 +265,6 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
         url: tokenEndpoint,
         method: "POST",
         json: true,
-        headers: {'content-type': 'application/x-www-form-urlencoded'},
         body: {
             grant_type: "client_credentials",
             client_id: clientID,
@@ -280,15 +279,15 @@ function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, au
 
 function _getAccesToken(tokenRequestPayload) {
     _log("_getAccesToken", "Start")
+    console.log(`_getAccesToken :: tokenRequestPayload = [${JSON.stringify(tokenRequestPayload)}]`)
     let auth0LoginBody
     try {
         auth0LoginBody = rp(tokenRequestPayload);
     } catch (error) {
-        console.error('Error getting token : ', error.message);
-        console.log(`_getAccesToken :: Error during token endpoint call > Error = [${JSON.stringify(error)}]`)
+        console.error('_getAccesToken :: Error getting token : ', error.message);
     }
 
-    console.log(`_getAccesToken :: ${JSON.stringify(auth0LoginBody)}`)
+    console.log(`_getAccesToken :: response from token endpoint : [${JSON.stringify(auth0LoginBody)}]`)
 
     const token = (auth0LoginBody)
         ? { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
@@ -299,7 +298,11 @@ function _getAccesToken(tokenRequestPayload) {
 
 function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
     _log("deployActionWithUpdatedSecrets", "Start")
+    let containsMgmtToken = Object.keys(event.secrets).includes(secret_key_mgmt_api_token);
+    console.log(`deployActionWithUpdatedSecrets :: hasMgmtToken? > [${containsMgmtToken ? "yes" : "no"}]`)
+    
     const mgmtApiTokenJsonString = event.secrets[secret_key_mgmt_api_token]
+    console.log(`deployActionWithUpdatedSecrets :: mgmtApiTokenJsonString? > [${mgmtApiTokenJsonString}]`)
     const mgmtApiToken = convertStringLiteralToJsonObj(mgmtApiTokenJsonString)
 
     const audience = `https://${domain}/api/v2/`
@@ -308,9 +311,10 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
     if (isTokenValidForAPI(mgmtApiToken)) {
         token = mgmtApiToken.access_token
     } else {
-
+        console.log(`deployActionWithUpdatedSecrets :: need to mint MGMT Token`)
         //Generate a signed jwt
         const mgmtApiClientDetailsJSON = event.secrets[secret_key_mgmt_api_client]
+        console.log(`deployActionWithUpdatedSecrets :: mgmtApiClientDetailsJSON > [${mgmtApiClientDetailsJSON}]`)
         const mgmtApiClientDetails = convertStringLiteralToJsonObj(mgmtApiClientDetailsJSON)
         const clientID = mgmtApiClientDetails[client_key_client_id]
         const credsType = mgmtApiClientDetails[client_key_client_creds_type]
@@ -337,11 +341,11 @@ function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
         domain: domain,
         scope: "read:actions update:actions"
     });
-
-    var params = { id: actionId };
+    
     try {
         //Get the actionId by actionName
         const actionId = getActionID(actionName, managementAPIHandle);
+        var params = { id: actionId };
 
         //Update the action with the secrets
         managementAPIHandle.actions.update(params, secrets);
