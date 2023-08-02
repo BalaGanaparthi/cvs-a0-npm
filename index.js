@@ -25,9 +25,9 @@ const secret_key_mgmt_api_client = "MGMT_API_CLIENT"
 const secret_key_mgmt_api_token = "mgmt_api_token"
 const secret_key_debug = "DEBUG"
 
-let debug = false
+var debug = false
 
-async function helloA0(event, api) {
+function helloA0(event, api) {
     console.log(`${JSON.stringify(event)} ${JSON.stringify(api)}`)
     return event.secrets
 }
@@ -44,10 +44,9 @@ async function helloA0(event, api) {
  * @param {*} event 
  * @param {*} api 
  */
-async function loadTokensToCache(event, api) {
+function loadTokensToCache(event, api) {
 
     let debug = Object.keys(event.secrets).includes(secret_key_debug);
-    console.log(`Debug is ${debug ? "on." : "off."}\n`)
 
     _log("loadTokensToCache", "Start")
 
@@ -91,8 +90,8 @@ async function loadTokensToCache(event, api) {
                 const jwtAssertion = createAssertion(clientID, privateKey, a0Domain)
                 token = getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, apiAudience)
             }
-             _log("loadTokensToCache", `APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
-             console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}], CredsType = [${credsType}], Token = [${JSON.stringify(token)}]`)
+            _log("loadTokensToCache", `APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
+            console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}], CredsType = [${credsType}], Token = [${JSON.stringify(token)}]`)
 
             updSecretAndCacheToken(api, token, apiName, secrets)
             if (!tokensMinted) {
@@ -113,7 +112,7 @@ async function loadTokensToCache(event, api) {
  * @param {*} event 
  * @returns {jsonObj} 
  */
-async function getAPIs(event) {
+function getAPIs(event) {
     _log("getAPIs", "Start")
     const apis_json = event.secrets[secret_key_apis]
     const apis_json_obj = convertStringLiteralToJsonObj(apis_json)
@@ -126,7 +125,7 @@ async function getAPIs(event) {
  * 
  * @param {String} jsonStringLiteral 
  */
-async function convertStringLiteralToJsonObj(jsonStringLiteral) {
+function convertStringLiteralToJsonObj(jsonStringLiteral) {
     _log("convertStringLiteralToJsonObj", "Start")
     const json_obj = jsonStringLiteral ? JSON.parse(jsonStringLiteral) : {}
     _log("convertStringLiteralToJsonObj", "End")
@@ -142,7 +141,7 @@ async function convertStringLiteralToJsonObj(jsonStringLiteral) {
  * @param {*} event 
  * @param {*} apiName 
  */
-async function isTokenValidForAPI(apiToken) {
+function isTokenValidForAPI(apiToken) {
     _log("isTokenValidForAPI", "Start")
     var isTokenValid
     if (!isEmptyJSON(apiToken)) {
@@ -169,7 +168,7 @@ async function isTokenValidForAPI(apiToken) {
  * @param {*} jsonObj 
  * @returns {boolean} true : if JSON object is empty `{}`
  */
-async function isEmptyJSON(jsonObj) {
+function isEmptyJSON(jsonObj) {
     _log("isEmptyJSON", "Start")
     const isEmpty = Object.keys(jsonObj).length === 0;
     _log("isEmptyJSON", "End")
@@ -177,14 +176,14 @@ async function isEmptyJSON(jsonObj) {
 }
 
 /**
- * async function to generate signed JWT. 
+ * function to generate signed JWT. 
  * 
  * @param {*} clientID - Client ID of the M2M app in Auth0 configured with Private Key credentials
  * @param {*} privateKey - Associated private key with the public key set with M2M app
  * @param {*} a0Domain - Auth0 domain
  * @returns - Signed JWT assertions
  */
-async function createAssertion(clientID, privateKey, domain) {
+function createAssertion(clientID, privateKey, domain) {
     _log("createAssertion", "Start")
     const pk = privateKey.split("\\n").join("\n");
     var signOptions = {
@@ -209,7 +208,7 @@ async function createAssertion(clientID, privateKey, domain) {
  * @param {*} apiName 
  * @param {*} secrets 
  */
-async function updSecretAndCacheToken(api, token, apiName, secrets) {
+function updSecretAndCacheToken(api, token, apiName, secrets) {
     _log("updSecretAndCacheToken", "Start")
     //Set token in Secrets
     secrets.push({
@@ -249,7 +248,7 @@ function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
 }
 
 /**
- * async function to mint token with client_secret
+ * function to mint token with client_secret
  * 
  * @param {*} tokenEndpoint 
  * @param {*} clientID 
@@ -258,7 +257,7 @@ function getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience) {
  * @returns - Return access token and the token expiry : 
  *            {access_token: 'At', expires_in : 'AT Expiry' }
  */
-async function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience) {
+function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience) {
     _log("getAccesTokenWithClientSecret", "Start")
     const auth0LoginOpts = {
         url: tokenEndpoint,
@@ -272,18 +271,23 @@ async function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecr
         }
     };
     console.log(`getAccesTokenWithClientSecret :: Calling _getAccesToken with payload > [${JSON.stringify(auth0LoginOpts)}]`)
-    const token = _getAccesToken(auth0LoginOpts)
+    const token = _getAccesToken(auth0LoginOpts).then(function (payload) {
+        pa
+    })
     _log("getAccesTokenWithClientSecret", "End")
     return token
 }
 
-async function _getAccesToken(tokenRequestPayload) {
+function _getAccesToken(tokenRequestPayload) {
     _log("_getAccesToken", "Start")
-    
+
     console.log(`_getAccesToken :: tokenRequestPayload = [${JSON.stringify(tokenRequestPayload)}]`)
+
     let auth0LoginBody
     try {
-        auth0LoginBody = rp(tokenRequestPayload);
+        auth0LoginBody = rp(tokenRequestPayload).then(function (payload) {
+            return payload
+        });
     } catch (error) {
         console.error('_getAccesToken :: Error getting token : ', error.message);
     }
@@ -297,11 +301,11 @@ async function _getAccesToken(tokenRequestPayload) {
     return token
 }
 
-async function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
+function deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName) {
     _log("deployActionWithUpdatedSecrets", "Start")
     let containsMgmtToken = Object.keys(event.secrets).includes(secret_key_mgmt_api_token);
     console.log(`deployActionWithUpdatedSecrets :: hasMgmtToken? > [${containsMgmtToken ? "yes" : "no"}]`)
-    
+
     const mgmtApiTokenJsonString = event.secrets[secret_key_mgmt_api_token]
     console.log(`deployActionWithUpdatedSecrets :: mgmtApiTokenJsonString? > [${mgmtApiTokenJsonString}]`)
     const mgmtApiToken = convertStringLiteralToJsonObj(mgmtApiTokenJsonString)
@@ -342,7 +346,7 @@ async function deployActionWithUpdatedSecrets(event, api, secrets, domain, actio
         domain: domain,
         scope: "read:actions update:actions"
     });
-    
+
     try {
         //Get the actionId by actionName
         const actionId = getActionID(actionName, managementAPIHandle);
@@ -362,13 +366,13 @@ async function deployActionWithUpdatedSecrets(event, api, secrets, domain, actio
 }
 
 /**
-   * async function to get action_id by action_name
+   * function to get action_id by action_name
    * 
    * @param {*} actionName - Name of action (to update the secrets with AT and ATExpiry)
    * @param {*} management - Management api handle to call Auth0 to get action_id
    * @returns - action_id ("0" if any error or a valid action_id)
    */
-async function getActionID(actionName, managementAPIHandle) {
+function getActionID(actionName, managementAPIHandle) {
     _log("getActionID", "Start")
     let actionId = "0"
     try {
@@ -385,10 +389,11 @@ async function getActionID(actionName, managementAPIHandle) {
     return actionId;
 }
 
-async function _log(method, message) {
-    // if (debug) {
+function _log(method, message) {
+    console.log(`Debug is ${debug ? "on." : "off."}\n`)
+    if (debug) {
         console.log(`[${method}]>> [${message}]`)
-    // }
+    }
 }
 
 module.exports = {
