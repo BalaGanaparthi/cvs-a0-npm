@@ -101,7 +101,7 @@ async function loadTokensToCache(event, api) {
     }
     if (tokensMinted) {
         const actionName = event.secrets[secret_key_this_action_name]
-        await deployActionWithUpdatedSecrets(api, token, secrets, domain, actionName)
+        await deployActionWithUpdatedSecrets(event, api, secrets, domain, actionName)
     }
     _log("loadTokensToCache", "End")
 }

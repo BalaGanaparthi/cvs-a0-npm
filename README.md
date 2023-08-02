@@ -1,5 +1,7 @@
 # cvs-a0-npm
 
+git add .
+git commit -m "Enh : Next version"
+git push origin main
 
-# tbd_npm
-# cvs-a0-npm
+npm publish --access=public
