@@ -47,6 +47,7 @@ function helloA0(event, api) {
 function loadTokensToCache(event, api) {
 
     let debug = Object.keys(event.secrets).includes(secret_key_debug);
+    console.log(`Debug is ${debug ? "on." : "off."}\n`)
 
     _log("loadTokensToCache", "Start")
 
@@ -89,8 +90,10 @@ function loadTokensToCache(event, api) {
                 const privateKey = apiClientDetails[client_key_client_creds]
                 const jwtAssertion = createAssertion(clientID, privateKey, a0Domain)
                 token = getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, apiAudience)
-
             }
+             _log("loadTokensToCache", `APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
+             console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
+             
             updSecretAndCacheToken(api, token, apiName, secrets)
             if (!tokensMinted) {
                 tokensMinted = true
