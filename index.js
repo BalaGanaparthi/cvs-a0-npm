@@ -69,8 +69,6 @@ async function loadTokensToCache(event, api) {
         const apiTokenJsonString = event.secrets[`${secret_key_token_prefix}${apiName}`]
         const apiToken = convertStringLiteralToJsonObj(apiTokenJsonString)
 
-        console.log(`loadTokensToCache :: secret value for key [${secret_key_token_prefix}${apiName}] = [${apiTokenJsonString}] \n\t token = [${JSON.stringify(apiToken[token_key_token])}]\n\t expiry = [${JSON.stringify(apiToken[token_key_expiry])}]`)
-
         if (isTokenValidForAPI(apiToken)) {
             //Cache Token
             api.cache.set(`${cache_key_token_prefix}${apiName}`, apiToken[token_key_token])
@@ -92,7 +90,6 @@ async function loadTokensToCache(event, api) {
                 const jwtAssertion = createAssertion(clientID, privateKey, a0Domain)
                 token = await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, apiAudience)
             }
-            _log("loadTokensToCache", `APIName = [${apiName}], ClientID = [${clientID}, CredsType = [${credsType}], Token = [${token}]`)
             console.log(`loadTokensToCache :: APIName = [${apiName}], ClientID = [${clientID}], CredsType = [${credsType}], Token = [${JSON.stringify(token)}]`)
 
             updSecretAndCacheToken(api, token, apiName, secrets)
@@ -153,20 +150,14 @@ function isTokenValidForAPI(apiToken) {
             console.log(`\t> isTokenValidForAPI :: Token Expiry ${_tokenExpiry} `)
             if (_tokenExpiry) {
                 isTokenValid = Number(_tokenExpiry) > Date.now()
-                console.log(`\t> isTokenValidForAPI :: Number(_tokenExpiry) = ${Number(_tokenExpiry)} `)
-                console.log(`\t> isTokenValidForAPI :: Date.now() = ${Date.now()} `)
-                console.log(`\t> isTokenValidForAPI :: isTokenValid ${isTokenValid} `)
             } else {
                 isTokenValid = false
-                console.log(`\t> isTokenValidForAPI :: No [${token_key_expiry}] key in token json`)
             }
         } else {
             isTokenValid = false
-            console.log(`\t> isTokenValidForAPI :: No [${token_key_token}] key in token json`)
         }
     } else {
         isTokenValid = false
-        console.log(`\t> isTokenValidForAPI :: token is empty`)
     }
     console.log(`\t> isTokenValidForAPI :: token ${isTokenValid ? "is" : "is not"} valid`)
     _log("isTokenValidForAPI", "End")
