@@ -322,38 +322,36 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
     let token
     if (isTokenValidForAPI(mgmtApiToken)) {
         token = mgmtApiToken[token_key_token]
-        console.log(`\t> deployActionWithUpdatedSecrets :: found management access token ${mgmtApiToken}`)
+        console.log(`\t> deployActionWithUpdatedSecrets :: found MGMT token ${token}`)
     } else {
         console.log(`deployActionWithUpdatedSecrets :: need to mint MGMT Token`)
         //Generate a signed jwt
         const mgmtApiClientDetailsJSON = event.secrets[secret_key_mgmt_api_client]
-        // console.log(`deployActionWithUpdatedSecrets :: mgmtApiClientDetailsJSON > [${mgmtApiClientDetailsJSON}]`)
         const mgmtApiClientDetails = convertStringLiteralToJsonObj(mgmtApiClientDetailsJSON)
         const clientID = mgmtApiClientDetails[client_key_client_id]
         const credsType = mgmtApiClientDetails[client_key_client_creds_type]
 
+        let _token
         if (credsType === const_client_creds_type_secret_key) {
             const clientSecret = mgmtApiClientDetails[client_key_client_creds]
-            const _token = await getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience)
-            token = _token.access_token
+            _token = await getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience)
         } else if (credsType === const_client_creds_type_pvt_key_jwt) {
             const privateKey = mgmtApiClientDetails[client_key_client_creds]
             const jwtAssertion = createAssertion(clientID, privateKey, domain)
-            const _token =  await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
-            token = _token.access_token
+            _token =  await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
         }
 
-        // console.log(`deployActionWithUpdatedSecrets :: Management token body is [${JSON.stringify(token)}] `)
         secrets.push({
             name: secret_key_mgmt_api_token,
-            value: `{"${token_key_token}" : "${token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (982 * token.expires_in))}"}`
+            value: `{"${token_key_token}" : "${_token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (982 * _token.expires_in))}"}`
         });
 
+        token = _token.access_token
         console.log(`\t> deployActionWithUpdatedSecrets :: Secrets object to be store in A0 is [${JSON.stringify(secrets)}] `)
     }
 
     const managementAPIHandle = new ManagementClient({
-        token: token.access_token,
+        token: token,
         domain: domain,
         scope: "read:actions update:actions"
     });
