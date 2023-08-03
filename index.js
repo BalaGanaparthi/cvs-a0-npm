@@ -321,7 +321,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
 
     let token
     if (isTokenValidForAPI(mgmtApiToken)) {
-        token = mgmtApiToken.access_token
+        token = mgmtApiToken
         console.log("deployActionWithUpdatedSecrets :: found management access token")
     } else {
         console.log(`deployActionWithUpdatedSecrets :: need to mint MGMT Token`)
