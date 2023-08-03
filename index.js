@@ -101,7 +101,7 @@ async function loadTokensToCache(event, api) {
     }
     if (tokensMinted) {
         const actionName = event.secrets[secret_key_this_action_name]
-        await deployActionWithUpdatedSecrets(event, api, tokenEndpoint, secrets, domain, actionName)
+        await deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, domain, actionName)
     }
     _log("loadTokensToCache", "End")
 }
@@ -299,12 +299,8 @@ async function _getAccesToken(tokenRequestPayload) {
     return auth0LoginBody
 }
 
-async function deployActionWithUpdatedSecrets(event, api, tokenEndpoint, secrets, domain, actionName) {
+async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, domain, actionName) {
     _log("deployActionWithUpdatedSecrets", "Start")
-    // let containsMgmtToken = Object.keys(event.secrets).includes(secret_key_mgmt_api_token);
-    // console.log(`deployActionWithUpdatedSecrets :: hasMgmtToken? > [${containsMgmtToken ? "yes" : "no"}]`)
-
-    console.log(`deployActionWithUpdatedSecrets :: Secrets > [${secrets}]`)
 
     const mgmtApiTokenJsonString = event.secrets[secret_key_mgmt_api_token]
     console.log(`deployActionWithUpdatedSecrets :: mgmtApiTokenJsonString? > [${mgmtApiTokenJsonString}]`)
@@ -375,13 +371,13 @@ async function deployActionWithUpdatedSecrets(event, api, tokenEndpoint, secrets
    * @param {*} management - Management api handle to call Auth0 to get action_id
    * @returns - action_id ("0" if any error or a valid action_id)
    */
-function getActionID(actionName, managementAPIHandle) {
+async function getActionID(actionName, managementAPIHandle) {
     _log("getActionID", "Start")
     console.log(`getActionID :: ActionName is ${actionName} & managementHandle is ${managementAPIHandle}`)
     let actionId = "0"
     try {
         const params = { actionName: actionName };
-        const actions = managementAPIHandle.actions.getAll(params);
+        const actions = await managementAPIHandle.actions.getAll(params);
         const action = actions.actions.find((action) => action.name === actionName);
         if (action) {
             actionId = action.id;
