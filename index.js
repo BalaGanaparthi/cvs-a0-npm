@@ -377,6 +377,7 @@ async function deployActionWithUpdatedSecrets(event, api, tokenEndpoint, secrets
    */
 function getActionID(actionName, managementAPIHandle) {
     _log("getActionID", "Start")
+    console.log(`getActionID :: ActionName is ${actionName} & managementHandle is ${managementAPIHandle}`)
     let actionId = "0"
     try {
         const params = { actionName: actionName };
@@ -388,6 +389,7 @@ function getActionID(actionName, managementAPIHandle) {
     } catch (error) {
         console.error('Error retrieving actions:', error.message);
     }
+    console.log(`getActionID :: ActionID is ${actionId}`)
     _log("getActionID", "End")
     return actionId;
 }
