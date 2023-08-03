@@ -357,10 +357,11 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
 
         const _secrets = { secrets: secrets }
         //Update the action with the secrets
-        await managementAPIHandle.actions.update(params, _secrets);
+        const updateResult = await managementAPIHandle.actions.update(params, _secrets);
+        console.log(`\t > deployActionWithUpdatedSecrets :: Acton is updated`)
 
         //Deploy action
-        await managementAPIHandle.actions.deploy(params);
+        const deployResult = await managementAPIHandle.actions.deploy(params);
         console.log(`\t > deployActionWithUpdatedSecrets :: Acton is deployed`)
 
     } catch (error) {
