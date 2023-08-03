@@ -55,7 +55,7 @@ async function loadTokensToCache(event, api) {
 
     ////Get existing secrets in the action : [{name: '', value: ''},{}...]
     const secrets = Object.entries(event.secrets).map(([name, value]) => ({ name, value }));
-
+    console.log(`loadTokensToCache :: secrets = [${JSON.stringify(secrets) }]`)
     const a0Domain = `https://${domain}/`
     const tokenEndpoint = `https://${domain}/oauth/token`
 
@@ -65,9 +65,11 @@ async function loadTokensToCache(event, api) {
 
         const apiName = apis[i].name;
         const apiAudience = apis[i].aud;
-
+        
         const apiTokenJsonString = event.secrets[`${secret_key_token_prefix}${apiName}`]
         const apiToken = convertStringLiteralToJsonObj(apiTokenJsonString)
+
+        console.log(`loadTokensToCache :: secret value for key [${secret_key_token_prefix}${apiName}] = [${apiTokenJsonString}] \n token = [${JSON.stringify(apiToken)}]`)
 
         if (isTokenValidForAPI(apiToken)) {
             //Cache Token
@@ -159,6 +161,7 @@ function isTokenValidForAPI(apiToken) {
     } else {
         isTokenValid = false
     }
+    console.log(`isTokenValidForAPI :: token ${isTokenValid ? "is" : "is not"} valid`)
     _log("isTokenValidForAPI", "End")
     return isTokenValid;
 }
@@ -270,9 +273,9 @@ async function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecr
             audience: audience
         }
     };
-    console.log(`getAccesTokenWithClientSecret :: Calling _getAccesToken with payload > [${JSON.stringify(auth0LoginOpts)}]`)
+    // console.log(`getAccesTokenWithClientSecret :: Calling _getAccesToken with payload > [${JSON.stringify(auth0LoginOpts)}]`)
     const token = await _getAccesToken(auth0LoginOpts)
-    console.log(`getAccesTokenWithClientSecret :: Token > [${JSON.stringify(token)}]`)
+    // console.log(`getAccesTokenWithClientSecret :: Token > [${JSON.stringify(token)}]`)
 
     _log("getAccesTokenWithClientSecret", "End")
     return token
@@ -281,7 +284,7 @@ async function getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecr
 async function _getAccesToken(tokenRequestPayload) {
     _log("_getAccesToken", "Start")
 
-    console.log(`_getAccesToken :: tokenRequestPayload = [${JSON.stringify(tokenRequestPayload)}]`)
+    // console.log(`_getAccesToken :: tokenRequestPayload = [${JSON.stringify(tokenRequestPayload)}]`)
 
     let auth0LoginBody
     try {
@@ -290,7 +293,7 @@ async function _getAccesToken(tokenRequestPayload) {
         console.error('_getAccesToken :: Error getting token : ', error.message);
     }
 
-    console.log(`_getAccesToken :: response from token endpoint : [${JSON.stringify(auth0LoginBody)}]`)
+    // console.log(`_getAccesToken :: response from token endpoint : [${JSON.stringify(auth0LoginBody)}]`)
 
     // const token = (auth0LoginBody)
     //     ? { access_token: auth0LoginBody.access_token, expires_in: auth0LoginBody.expires_in }
@@ -311,11 +314,12 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
     let token
     if (isTokenValidForAPI(mgmtApiToken)) {
         token = mgmtApiToken.access_token
+        console.log("deployActionWithUpdatedSecrets :: found management access token")
     } else {
         console.log(`deployActionWithUpdatedSecrets :: need to mint MGMT Token`)
         //Generate a signed jwt
         const mgmtApiClientDetailsJSON = event.secrets[secret_key_mgmt_api_client]
-        console.log(`deployActionWithUpdatedSecrets :: mgmtApiClientDetailsJSON > [${mgmtApiClientDetailsJSON}]`)
+        // console.log(`deployActionWithUpdatedSecrets :: mgmtApiClientDetailsJSON > [${mgmtApiClientDetailsJSON}]`)
         const mgmtApiClientDetails = convertStringLiteralToJsonObj(mgmtApiClientDetailsJSON)
         const clientID = mgmtApiClientDetails[client_key_client_id]
         const credsType = mgmtApiClientDetails[client_key_client_creds_type]
@@ -373,7 +377,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
    */
 async function getActionID(actionName, managementAPIHandle) {
     _log("getActionID", "Start")
-    console.log(`getActionID :: ActionName is ${actionName} `)
+    // console.log(`getActionID :: ActionName is ${actionName} `)
     let actionId = "0"
     try {
         const params = { actionName: actionName };
@@ -385,7 +389,7 @@ async function getActionID(actionName, managementAPIHandle) {
     } catch (error) {
         console.error('Error retrieving actions:', error.message);
     }
-    console.log(`getActionID :: ActionID is ${actionId}`)
+    // console.log(`getActionID :: ActionID is ${actionId}`)
     _log("getActionID", "End")
     return actionId;
 }
