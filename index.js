@@ -329,7 +329,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
             token = await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
         }
 
-        console.log(`deployActionWithUpdatedSecrets :: Management token body is [${JSON.stringify(token)}] `)
+        // console.log(`deployActionWithUpdatedSecrets :: Management token body is [${JSON.stringify(token)}] `)
         secrets.push({
             name: secret_key_mgmt_api_token,
             value: `{"${token_key_token}" : "${token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (982 * token.expires_in))}"}`
@@ -373,7 +373,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
    */
 async function getActionID(actionName, managementAPIHandle) {
     _log("getActionID", "Start")
-    console.log(`getActionID :: ActionName is ${actionName} & managementHandle is ${managementAPIHandle}`)
+    console.log(`getActionID :: ActionName is ${actionName} `)
     let actionId = "0"
     try {
         const params = { actionName: actionName };
@@ -391,10 +391,10 @@ async function getActionID(actionName, managementAPIHandle) {
 }
 
 function _log(method, message) {
-    console.log(`Debug is ${debug ? "on." : "off."}\n`)
-    if (debug) {
+    // console.log(`Debug is ${debug ? "on." : "off."}\n`)
+    // if (debug) {
         console.log(`[${method}]>> [${message}]`)
-    }
+    // }
 }
 
 module.exports = {
