@@ -147,11 +147,11 @@ function isTokenValidForAPI(apiToken) {
     _log("isTokenValidForAPI", "Start")
     var isTokenValid
     if (!isEmptyJSON(apiToken)) {
-        const apiToken = apiToken[token_key_token]
-        if (apiToken) {
-            const tokenExpiry = apiToken[token_key_expiry]
-            if (apiToken) {
-                isTokenValid = Number(enterprise_api_token_expiry) > Date.now()
+        const _apiToken = apiToken[token_key_token]
+        if (_apiToken) {
+            const _tokenExpiry = _apiToken[token_key_expiry]
+            if (_tokenExpiry) {
+                isTokenValid = Number(_tokenExpiry) > Date.now()
             } else {
                 isTokenValid = false
             }
