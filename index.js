@@ -150,18 +150,25 @@ function isTokenValidForAPI(apiToken) {
         const _apiToken = apiToken[token_key_token]
         if (_apiToken) {
             const _tokenExpiry = _apiToken[token_key_expiry]
+            console.log(`\t> isTokenValidForAPI :: Token Expiry ${_tokenExpiry} `)
             if (_tokenExpiry) {
                 isTokenValid = Number(_tokenExpiry) > Date.now()
+                console.log(`\t> isTokenValidForAPI :: Number(_tokenExpiry) = ${Number(_tokenExpiry)} `)
+                console.log(`\t> isTokenValidForAPI :: Date.now() = ${Date.now()} `)
+                console.log(`\t> isTokenValidForAPI :: isTokenValid ${isTokenValid} `)
             } else {
                 isTokenValid = false
+                console.log(`\t> isTokenValidForAPI :: No [${token_key_expiry}] key in token json`)
             }
         } else {
             isTokenValid = false
+            console.log(`\t> isTokenValidForAPI :: No [${token_key_token}] key in token json`)
         }
     } else {
         isTokenValid = false
+        console.log(`\t> isTokenValidForAPI :: token is empty`)
     }
-    console.log(`isTokenValidForAPI :: token ${isTokenValid ? "is" : "is not"} valid`)
+    console.log(`\t> isTokenValidForAPI :: token ${isTokenValid ? "is" : "is not"} valid`)
     _log("isTokenValidForAPI", "End")
     return isTokenValid;
 }
@@ -174,6 +181,7 @@ function isTokenValidForAPI(apiToken) {
 function isEmptyJSON(jsonObj) {
     _log("isEmptyJSON", "Start")
     const isEmpty = Object.keys(jsonObj).length === 0;
+    console.log(`\t> isEmptyJSON :: jsonObj ${isTokenValid ? "is" : "is not"} empty`)
     _log("isEmptyJSON", "End")
     return isEmpty
 }
@@ -306,7 +314,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
     _log("deployActionWithUpdatedSecrets", "Start")
 
     const mgmtApiTokenJsonString = event.secrets[secret_key_mgmt_api_token]
-    console.log(`deployActionWithUpdatedSecrets :: mgmtApiTokenJsonString? > [${mgmtApiTokenJsonString}]`)
+    console.log(`\t> deployActionWithUpdatedSecrets :: mgmtApiTokenJsonString? > [${mgmtApiTokenJsonString}]`)
     const mgmtApiToken = convertStringLiteralToJsonObj(mgmtApiTokenJsonString)
 
     const audience = `https://${domain}/api/v2/`
@@ -339,7 +347,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
             value: `{"${token_key_token}" : "${token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (982 * token.expires_in))}"}`
         });
 
-        console.log(`deployActionWithUpdatedSecrets :: Secrets object to be store in A0 is [${JSON.stringify(secrets)}] `)
+        console.log(`\t> deployActionWithUpdatedSecrets :: Secrets object to be store in A0 is [${JSON.stringify(secrets)}] `)
 
     }
 
@@ -360,9 +368,10 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
 
         //Deploy action
         managementAPIHandle.actions.deploy(params);
+        console.log(`\t > deployActionWithUpdatedSecrets :: Acton is deployed`)
 
     } catch (error) {
-        console.error('Error updating secrets:', error.message);
+        console.error('\t Error updating secrets:', error.message);
     }
 
     _log("deployActionWithUpdatedSecrets", "End")
