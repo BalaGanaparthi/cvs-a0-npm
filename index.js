@@ -347,7 +347,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
 
     try {
         //Get the actionId by actionName
-        const actionId = getActionID(actionName, managementAPIHandle);
+        const actionId = await getActionID(actionName, managementAPIHandle);
         var params = { id: actionId };
 
         const _secrets = { secrets: secrets }
