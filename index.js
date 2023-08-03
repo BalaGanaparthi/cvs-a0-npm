@@ -181,7 +181,7 @@ function isTokenValidForAPI(apiToken) {
 function isEmptyJSON(jsonObj) {
     _log("isEmptyJSON", "Start")
     const isEmpty = Object.keys(jsonObj).length === 0;
-    console.log(`\t> isEmptyJSON :: jsonObj ${isTokenValid ? "is" : "is not"} empty`)
+    console.log(`\t> isEmptyJSON :: jsonObj ${isEmpty ? "is" : "is not"} empty`)
     _log("isEmptyJSON", "End")
     return isEmpty
 }
