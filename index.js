@@ -69,7 +69,7 @@ async function loadTokensToCache(event, api) {
         const apiTokenJsonString = event.secrets[`${secret_key_token_prefix}${apiName}`]
         const apiToken = convertStringLiteralToJsonObj(apiTokenJsonString)
 
-        console.log(`loadTokensToCache :: secret value for key [${secret_key_token_prefix}${apiName}] = [${apiTokenJsonString}] \n token = [${JSON.stringify(apiToken)}]`)
+        console.log(`loadTokensToCache :: secret value for key [${secret_key_token_prefix}${apiName}] = [${apiTokenJsonString}] \n\t token = [${JSON.stringify(apiToken[token_key_token])}]\n\t expiry = [${JSON.stringify(apiToken[token_key_expiry])}]`)
 
         if (isTokenValidForAPI(apiToken)) {
             //Cache Token
@@ -149,7 +149,7 @@ function isTokenValidForAPI(apiToken) {
     if (!isEmptyJSON(apiToken)) {
         const _apiToken = apiToken[token_key_token]
         if (_apiToken) {
-            const _tokenExpiry = _apiToken[token_key_expiry]
+            const _tokenExpiry = apiToken[token_key_expiry]
             console.log(`\t> isTokenValidForAPI :: Token Expiry ${_tokenExpiry} `)
             if (_tokenExpiry) {
                 isTokenValid = Number(_tokenExpiry) > Date.now()
