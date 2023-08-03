@@ -321,8 +321,8 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
 
     let token
     if (isTokenValidForAPI(mgmtApiToken)) {
-        token = mgmtApiToken
-        console.log("deployActionWithUpdatedSecrets :: found management access token")
+        token = mgmtApiToken[token_key_token]
+        console.log(`\t> deployActionWithUpdatedSecrets :: found management access token ${mgmtApiToken}`)
     } else {
         console.log(`deployActionWithUpdatedSecrets :: need to mint MGMT Token`)
         //Generate a signed jwt
@@ -334,11 +334,13 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
 
         if (credsType === const_client_creds_type_secret_key) {
             const clientSecret = mgmtApiClientDetails[client_key_client_creds]
-            token = await getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience)
+            const _token = await getAccesTokenWithClientSecret(tokenEndpoint, clientID, clientSecret, audience)
+            token = _token.access_token
         } else if (credsType === const_client_creds_type_pvt_key_jwt) {
             const privateKey = mgmtApiClientDetails[client_key_client_creds]
             const jwtAssertion = createAssertion(clientID, privateKey, domain)
-            token = await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
+            const _token =  await getAccesTokenWithPvtKeyJwt(tokenEndpoint, jwtAssertion, audience)
+            token = _token.access_token
         }
 
         // console.log(`deployActionWithUpdatedSecrets :: Management token body is [${JSON.stringify(token)}] `)
@@ -348,7 +350,6 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
         });
 
         console.log(`\t> deployActionWithUpdatedSecrets :: Secrets object to be store in A0 is [${JSON.stringify(secrets)}] `)
-
     }
 
     const managementAPIHandle = new ManagementClient({
