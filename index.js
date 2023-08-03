@@ -24,6 +24,9 @@ const secret_key_client_prefix = "ENT_API_CLIENT_"
 const secret_key_mgmt_api_client = "MGMT_API_CLIENT"
 const secret_key_mgmt_api_token = "mgmt_api_token"
 const secret_key_debug = "DEBUG"
+//
+const const_management_client_api_scopes = "read:actions update:actions create:actions"
+const const_token_preempt_value = 982
 
 var debug = false
 
@@ -215,7 +218,7 @@ function updSecretAndCacheToken(api, token, apiName, secrets) {
     //Set token in Secrets
     secrets.push({
         name: `${secret_key_token_prefix}${apiName}`,
-        value: `{"${token_key_token}" : "${token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (982 * token.expires_in))}"}`
+        value: `{"${token_key_token}" : "${token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (const_token_preempt_value * token.expires_in))}"}`
     });
 
     //Cache the enterprise access token
@@ -334,7 +337,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
 
         secrets.push({
             name: secret_key_mgmt_api_token,
-            value: `{"${token_key_token}" : "${_token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (982 * _token.expires_in))}"}`
+            value: `{"${token_key_token}" : "${_token.access_token}", "${token_key_expiry}" : "${String(Date.now() + (const_token_preempt_value * _token.expires_in))}"}`
         });
 
         token = _token.access_token
@@ -344,7 +347,7 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
     const managementAPIHandle = new ManagementClient({
         token: token,
         domain: domain,
-        scope: "read:actions update:actions"
+        scope: const_management_client_api_scopes
     });
 
     try {
@@ -354,10 +357,10 @@ async function deployActionWithUpdatedSecrets(event, tokenEndpoint, secrets, dom
 
         const _secrets = { secrets: secrets }
         //Update the action with the secrets
-        managementAPIHandle.actions.update(params, _secrets);
+        await managementAPIHandle.actions.update(params, _secrets);
 
         //Deploy action
-        managementAPIHandle.actions.deploy(params);
+        await managementAPIHandle.actions.deploy(params);
         console.log(`\t > deployActionWithUpdatedSecrets :: Acton is deployed`)
 
     } catch (error) {
